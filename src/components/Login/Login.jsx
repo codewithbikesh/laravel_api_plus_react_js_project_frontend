@@ -1,55 +1,50 @@
+// src/components/Login.js
 import React, { useState } from 'react';
-import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import './login.css';
 
 const Login = () => {
-  // State management for form inputs and status
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(''); // To display error messages
+  const [loading, setLoading] = useState(false); // To manage loading state
+  const navigate = useNavigate();
 
-  // Handle input changes
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    if (name === 'username') {
-      setUsername(value);
-    } else if (name === 'password') {
-      setPassword(value);
-    }
-  };
-
-  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError('');
+    
+    const loginData = {
+      email,
+      password,
+    };
+
+    setLoading(true); // Start loading when submitting
 
     try {
-      // Send login request to the API
-      const response = await axios.post('http://127.0.0.1:8000/api/login', {
-        username,
-        password
+      const response = await fetch('http://127.0.0.1:8000/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(loginData),
       });
 
-      // Extract token from response
-      const token = response.data.token;
-
-      // Store token securely (localStorage in this example)
-      localStorage.setItem('authToken', token);
-
-      // Handle successful login (e.g., redirect or update UI)
-      console.log('Login successful:', response.data);
-
-      // Example of redirecting to a different page
-      // window.location.href = '/dashboard';
-
-    } catch (err) {
-      // Handle errors (e.g., display error message)
-      console.error('Login failed:', err.response ? err.response.data : err.message);
-      setError('Login failed. Please check your username and password.');
+      const data = await response.json();
+      if (response.ok) {
+        // Handle successful login, store token and navigate to dashboard
+        localStorage.setItem('token', data.token);
+        console.log('Login successful:', data);
+        navigate('/dashboard');
+      } else {
+        // Handle errors
+        setError(data.message || 'Login failed');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setError('Something went wrong. Please try again.');
     } finally {
-      setLoading(false);
+      setLoading(false); // End loading regardless of the result
     }
   };
 
@@ -59,14 +54,15 @@ const Login = () => {
         <p className="title">Login</p>
         <form className="form" onSubmit={handleSubmit}>
           <div className="input-group">
-            <label htmlFor="username">Username</label>
+            <label htmlFor="email">Email</label>
             <input
-              type="text"
-              name="username"
-              id="username"
-              placeholder=""
-              value={username}
-              onChange={handleInputChange}
+              type="email"
+              name="email"
+              id="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
             />
           </div>
           <div className="input-group">
@@ -75,12 +71,13 @@ const Login = () => {
               type="password"
               name="password"
               id="password"
-              placeholder=""
+              placeholder="Enter your password"
               value={password}
-              onChange={handleInputChange}
+              onChange={(e) => setPassword(e.target.value)}
+              required
             />
             <div className="forgot">
-              <a rel="noopener noreferrer" href="#">Forgot Password?</a>
+              <a href="#" rel="noopener noreferrer">Forgot Password?</a>
             </div>
           </div>
           <button className="sign" type="submit" disabled={loading}>
@@ -88,26 +85,28 @@ const Login = () => {
           </button>
           {error && <p className="error-message">{error}</p>}
         </form>
+
         <div className="social-message">
           <div className="line"></div>
           <p className="message">Login with social accounts</p>
           <div className="line"></div>
         </div>
+
         <div className="social-icons">
-          {/* Social login buttons */}
           <button aria-label="Log in with Google" className="icon">
-            {/* Google SVG icon */}
+            {/* Google SVG icon here */}
           </button>
           <button aria-label="Log in with Twitter" className="icon">
-            {/* Twitter SVG icon */}
+            {/* Twitter SVG icon here */}
           </button>
           <button aria-label="Log in with GitHub" className="icon">
-            {/* GitHub SVG icon */}
+            {/* GitHub SVG icon here */}
           </button>
         </div>
+
         <p className="signup">
-          Don't have an account?
-          <a rel="noopener noreferrer" href="#" className="">Sign up</a>
+          Don't have an account? 
+          <a href="#" rel="noopener noreferrer" className="">Sign up</a>
         </p>
       </div>
     </div>
@@ -115,4 +114,3 @@ const Login = () => {
 };
 
 export default Login;
-
